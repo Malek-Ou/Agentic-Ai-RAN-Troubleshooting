@@ -261,6 +261,6 @@ This project explores:
 
 ## License
 
-This project was developed as part of a Final Year Engineering Project (PFE) at the National School of Electronics and Telecommunications of Sfax (ENET'COM), in partnership with Orange Tunisia.
+This project was developed as part of a Final Year Engineering Project (PFE) at Orange Tunisia.
 
 The repository contains only non-confidential research and software components. Industrial data and proprietary materials are not included.
