@@ -1,5 +1,4 @@
 # Agentic-Ai-RAN-Troubleshooting
->
 > An AI-powered platform for automated anomaly detection and root cause analysis in 4G LTE radio access networks, combining ML-based KPI monitoring, a multi-agent diagnostic pipeline, and a knowledge-augmented reasoning engine.
 
 ---
