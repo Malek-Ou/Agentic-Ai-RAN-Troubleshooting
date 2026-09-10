@@ -1,23 +1,15 @@
 # Agentic-Ai-RAN-Troubleshooting
-# 🛰️ RAN AIOps Copilot
-
 >
 > An AI-powered platform for automated anomaly detection and root cause analysis in 4G LTE radio access networks, combining ML-based KPI monitoring, a multi-agent diagnostic pipeline, and a knowledge-augmented reasoning engine.
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
 - [Architecture](#architecture)
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [System Evaluation](#system-evaluation)
-- [Screenshots](#screenshots)
-- [Roadmap](#roadmap)
-
 ---
 
 ## Overview
