@@ -1,4 +1,4 @@
-# Agentic-Ai-RAN-Troubleshooting
+# Agentic-RAG-RAN-AIOps
 
 > An Agentic AI platform for anomaly detection and root cause analysis in 4G LTE Radio Access Networks (RAN), combining hybrid ML-based KPI monitoring, multi-agent reasoning, Knowledge Graphs, RAG, and Case-Based Reasoning.
 
@@ -10,9 +10,9 @@
 - [Architecture](#architecture)
 - [Diagnostic Pipeline](#diagnostic-pipeline)
 - [Anomaly Detection](#anomaly-detection)
+- [Knowledge Graph](#knowledge-graph)
 - [Key Features](#key-features)
 - [Tech Stack](#tech-stack)
-- [Repository Scope](#repository-scope)
 - [Research Areas](#research-areas)
 - [License](#license)
 
@@ -54,7 +54,6 @@ Both entry points converge into a shared diagnostic workflow.
                                      ▼
              ┌─────────────────────────────────────────────┐
              │       Agentic Diagnostic Pipeline           │
-             │                 LangGraph                   │
              │                                             │
              │  1. Symptom Identification                  │
              │              │                              │
@@ -98,84 +97,83 @@ Both entry points converge into a shared diagnostic workflow.
 
 ## Diagnostic Pipeline
 
-The diagnostic workflow is implemented as a LangGraph pipeline composed of five processing nodes.
+The diagnostic workflow is implemented as a LangGraph state graph with shared state. Two investigation modes are supported: `manual_query` (free-text NOC engineer input) and `ml_anomaly` (pre-structured metadata injected directly from the ML pipeline).
 
-| Node | Component                        | Main Responsibility                                                                      |
-|------|----------------------------------|------------------------------------------------------------------------------------------|
-| 1    | **Symptom Identification Agent** | Builds a structured symptom context from a natural-language query or ML anomaly metadata |
-| 2    | **CBR Memory Manager**           | Retrieves similar validated or corrected historical cases                                 |
-| 3    | **Retrieval Agent**              | Performs ReAct-based evidence retrieval using Knowledge Graph, RAG, and web search        |
-| 4    | **Root Cause Analysis Agent**    | Synthesizes the available evidence into an explainable RCA hypothesis                    |
-| 5    | **Memory Save**                  | Persists the generated case with `pending` validation status                             |
+| Node | Component | Main Responsibility |
+|------|-----------|---------------------|
+| 1 | **Symptom Identification Agent** | Builds a structured symptom context from a natural-language query or ML anomaly metadata |
+| 2 | **CBR Memory Manager** | Retrieves similar validated or corrected historical cases |
+| 3 | **Retrieval Agent** | Performs ReAct-based evidence retrieval using Knowledge Graph, RAG, and web search |
+| 4 | **Root Cause Analysis Agent** | Synthesizes available evidence into an explainable RCA hypothesis |
+| 5 | **Memory Save** | Persists the generated case with `pending` validation status |
 
-### Symptom Identification
-
-The Symptom Identification Agent extracts:
-
-- Affected cell
-- Relevant KPI dimensions
-- KPI category
-- Estimated severity
-
-For ML-triggered investigations, structured anomaly metadata is directly mapped into the symptom context, avoiding unnecessary LLM calls.
-
-### Case-Based Reasoning
-
-The CBR Memory Manager retrieves similar historical investigations using multiple criteria, including:
-
-- Symptom type
-- KPI category
-- Severity
-- Root-cause keywords
-
-Only **validated or corrected cases** are eligible for future retrieval.
-
-New investigation cases are initially stored with a `pending` status and remain excluded from retrieval until expert validation.
-
-### ReAct Retrieval
-
-The Retrieval Agent uses a **Reasoning + Acting (ReAct)** loop to select the most appropriate knowledge source.
-
-A deterministic Knowledge Graph query is executed before the ReAct loop to guarantee structured causal evidence.
-
-Available retrieval sources:
-
-| Source              | Role                                                                            |
-|---------------------|---------------------------------------------------------------------------------|
-| **Knowledge Graph** | Retrieves causal KPI–root cause relationships from Neo4j                        |
-| **RAG**             | Retrieves relevant technical documentation using hybrid dense/sparse search     |
-| **Web Search**      | External fallback for novel fault patterns when local knowledge is insufficient |
-
+---
 
 ## Anomaly Detection
 
-The system uses a hybrid anomaly detection strategy because 4G LTE KPIs exhibit heterogeneous temporal behavior.
+Each KPI series is dispatched to the appropriate detection method based on its temporal characteristics.
 
-| Condition                     | Method                     | Rationale                                          |
-|-------------------------------|----------------------------|----------------------------------------------------|
-| Low residual variability      | **SARIMA**                 | Stable temporal structure and daily seasonality    |
-| Moderate residual variability | **Prophet**                | Robust to outliers and trend changes               |
-| High residual variability     | **STL + IQR**              | Non-parametric detection for irregular series      |
-| Event-based KPIs              | **Modified Z-Score / MAD** | Suitable for ratio-based and non-seasonal behavior |
+| Condition | Method | Rationale |
+|-----------|--------|-----------|
+| Low residual variability | **SARIMA** | Stable temporal structure and daily seasonality |
+| Moderate residual variability | **Prophet** | Robust to outliers and trend changes |
+| High residual variability | **STL + IQR** | Non-parametric detection for irregular series |
+| Event-based KPIs | **Modified Z-Score / MAD** | Suitable for ratio-based and non-seasonal behavior |
 
-The detection pipeline routes each KPI to the appropriate method according to its temporal characteristics.
+---
+
+## Knowledge Graph
+
+The system implements a three-layer causal graph over structured operational data. Unlike vector retrieval — which extracts semantic evidence from technical documents — the Knowledge Graph provides explicit causal reasoning over structured operational data. While RAG retrieves documents describing possible root causes, the KG encodes causal relationships between KPI anomalies, alarms, and root cause categories. This complementarity motivates the use of two separate knowledge stores.
+
+### Three-Layer Structure
+
+| Layer | Content | Source |
+|-------|---------|--------|
+| **OSS Causal Graph** | `:RootCause` and `:OSSAlarm` nodes linked by `[:CAUSES]` relationships | 31,696 field OSS alarm records — documented operator ground truth + temporal co-occurrence (±120 min sliding window) |
+| **Operational Network Graph** | `:ENodeB`, `:Cell`, `:KPI`, `:KPICategory`, `:Anomaly`, `:TimeWindow` nodes | 283,564 ML-detected KPI anomaly observations across 878 cells and 119 eNodeBs |
+| **Bayesian Inference Layer** | `[:HAS_ROOT_CAUSE]` relationships with posterior probabilities `P(RC | KPI)` | Documentary evidence (35 Huawei manuals) + empirical field statistics |
+
+### Node Types
+
+A cell-level `risk_score` is computed from mean anomaly severity, critical anomaly ratio, and total anomaly count.
+
+| Node | Business Role | Key Properties |
+|------|--------------|----------------|
+| `:ENodeB` | Base station infrastructure | `id` |
+| `:Cell` | Network observation unit | `id`, `risk_score`, `anomaly_count`, `critical_ratio` |
+| `:KPI` | Impacted metric | `name` |
+| `:KPICategory` | KPI grouping | `category` |
+| `:Anomaly` | ML-detected event | `id`, `severity`, `z_score`, `model`, `kpi_category` |
+| `:TimeWindow` | Temporal dimension | `time`, `hour`, `day` |
+
+### Relationship Types
+
+| Relationship | Semantics |
+|--------------|-----------|
+| `(ENodeB)-[:HAS_CELL]->(Cell)` | Station owns cells |
+| `(Cell)-[:HAS_ANOMALY]->(Anomaly)` | Cell exhibits an anomaly |
+| `(Anomaly)-[:INVOLVES_KPI]->(KPI)` | Anomaly impacts a KPI |
+| `(KPI)-[:BELONGS_TO]->(KPICategory)` | KPI belongs to a category |
+| `(Anomaly)-[:OCCURS_AT]->(TimeWindow)` | Anomaly timestamped |
 
 ---
 
 ## Key Features
 
-- **Hybrid KPI Anomaly Detection** using SARIMA, Prophet, STL + IQR, and Modified Z-Score
+- **Hybrid KPI Anomaly Detection** using SARIMA, Prophet, STL + IQR, and Modified Z-Score / MAD
 - **Intent Classification** for routing natural-language requests
 - **Multi-Agent Diagnostic Pipeline** orchestrated with LangGraph
-- **ReAct Retrieval** for adaptive knowledge-source selection
-- **Knowledge Graph Reasoning** using Neo4j causal relationships
-- **Hybrid RAG** combining dense and BM25 retrieval
-- **Reciprocal Rank Fusion (RRF)** for hybrid retrieval merging
-- **Cross-Encoder Reranking** for final context selection
+- **ReAct Retrieval** for adaptive knowledge-source selection with deterministic KG pre-query
+- **Three-Layer Knowledge Graph** with Bayesian posterior scoring over 283,564 anomaly observations
+- **Hybrid RAG** with dense + BM25 retrieval and RRF fusion
+- **Cross-Encoder Reranking** for final context precision
+- **Huawei-Aware Chunking** preserving alarm entries and MML commands
 - **Case-Based Reasoning** using validated historical investigations
-- **Web Search Fallback** for novel fault patterns not covered by local knowledge
-- **Explainable Root Cause Analysis** with evidence traceability and confidence breakdown
+- **Web Search Fallback** via Tavily for novel fault patterns
+- **Explainable Root Cause Analysis** with evidence traceability and confidence breakdown, streamed via Server-Sent Events
 - **Human-In-The-Loop Validation** with Validate / Correct / Reject / Skip actions
+- **RAGAS Evaluation** on a 12-case golden set
 - **Pipeline Observability** using Arize Phoenix
 
 ---
@@ -187,9 +185,10 @@ The detection pipeline routes each KPI to the appropriate method according to it
 | Component | Technology |
 |-----------|------------|
 | Anomaly Detection | SARIMA, Prophet, STL + IQR, Modified Z-Score / MAD |
-| LLM Reasoning | Large Language Models (LLMs) via API |
+| LLM Reasoning (cloud) | llama-3.3-70b-instruct, llama-3.1-8b-instruct via OpenRouter |
+| LLM Reasoning (local fallback) | qwen2.5:7b, qwen2.5:3b-instruct via Ollama |
 | Agentic Loops | ReAct (Reasoning + Acting) |
-| Language | Python |
+| Language | Python 3.10+ |
 
 ### Agentic AI
 
@@ -203,12 +202,19 @@ The detection pipeline routes each KPI to the appropriate method according to it
 | Component | Technology |
 |-----------|------------|
 | Knowledge Graph | Neo4j |
-| Vector Database | Qdrant |
+| Vector Database | Qdrant (INT8 quantization, on-disk payload) |
+| Embedding Model | nomic-embed-text v1.5 (768 dim, 8,192 tok context) |
 | Sparse Retrieval | BM25 |
-| Semantic Retrieval | Dense Embeddings |
 | Retrieval Fusion | Reciprocal Rank Fusion (RRF) |
-| Reranking | Cross-Encoder |
+| Reranking | cross-encoder/ms-marco-MiniLM-L-6-v2 |
 | Web Search Fallback | Tavily |
+
+### Evaluation
+
+| Component | Technology |
+|-----------|------------|
+| RAG Evaluation Framework | RAGAS |
+| LLM-as-a-Judge | meta-llama/llama-3.3-70b-instruct via OpenRouter |
 
 ### Observability
 
@@ -226,27 +232,7 @@ The detection pipeline routes each KPI to the appropriate method according to it
 
 ---
 
-## Repository Scope
-
-This repository focuses on the **AI/ML and reasoning components** of the RAN troubleshooting system.
-
-The following are intentionally excluded:
-
-- Industrial Orange Tunisia data
-- Real KPI and alarm datasets
-- Internal network identifiers
-- Confidential technical documentation
-- API keys and credentials
-- Internal infrastructure configurations
-- Production frontend
-
-Synthetic or anonymized examples can be used to demonstrate the main processing pipelines without exposing industrial information.
-
----
-
 ## Research Areas
-
-This project explores:
 
 - Generative AI
 - Agentic AI & Multi-Agent Systems
@@ -261,6 +247,6 @@ This project explores:
 
 ## License
 
-This project was developed as part of a Final Year Engineering Project (PFE) at Orange Tunisia.
+This project was developed as part of a Final Year Engineering Project (PFE) at the National School of Electronics and Telecommunications of Sfax (ENET'COM), in partnership with Orange Tunisia.
 
 The repository contains only non-confidential research and software components. Industrial data and proprietary materials are not included.
