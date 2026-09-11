@@ -1,7 +1,9 @@
 # Agentic-RAG-RAN-AIOps
 
 > An Agentic AI platform for anomaly detection and root cause analysis in 4G LTE Radio Access Networks (RAN), combining hybrid ML-based KPI monitoring, multi-agent reasoning, Knowledge Graphs, RAG, and Case-Based Reasoning.
-
+<p align="center">
+  <img src="demo/1 Light Mode.png" width="900">
+</p>
 ---
 
 ## Table of Contents
