@@ -26,7 +26,7 @@ RESET_DB=True
 NEO4J_URI      = os.getenv("NEO4J_URI")
 NEO4J_USER     = os.getenv("NEO4J_USER")
 NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
-NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE")
 DATA_PATH = os.getenv("DATA_PATH") 
 # ── 0. Chargement anomalies_kg ────────────────────────────────────────────────
 anomalies_kg = pd.read_pickle("data/anomalies_kg.pkl")
