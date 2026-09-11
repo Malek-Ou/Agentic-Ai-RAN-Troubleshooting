@@ -5,9 +5,6 @@
 <p align="center">
   <img src="demo/1 Dark Mode.png" width="700">
 </p>
-<p align="center">
-  <img src="demo/Flow Diagram.png" width="700">
-</p>
 
 ## Table of Contents
 
@@ -27,9 +24,9 @@
 
 Modern 4G LTE networks generate large volumes of heterogeneous KPI, alarm, and technical data. Traditional troubleshooting approaches rely heavily on manual analysis and predefined rules, making Root Cause Analysis (RCA) time-consuming and operator-dependent.
 
-**RAN AIOps Copilot** combines machine learning, structured network knowledge, technical documentation, and agentic reasoning to support automated network diagnosis.
+The proposed solution combines machine learning, structured network knowledge, technical documentation, and agentic reasoning for automated network diagnosis.
 
-The system provides two investigation entry points:
+It supports two investigation entry points:
 
 - **ML-Assisted Investigation**: detected KPI anomalies are directly forwarded to the diagnostic pipeline as structured inputs.
 - **Interactive Investigation**: NOC engineers submit natural-language troubleshooting queries.
@@ -39,66 +36,12 @@ Both entry points converge into a shared diagnostic workflow.
 ---
 
 ## Architecture
-
-```text
-                         ┌──────────────────────────┐
-                         │       Input Layer        │
-                         │                          │
-                         │  Natural Language Query  │
-                         │           │              │
-                         │  ML KPI Anomaly          │
-                         └───────────┬──────────────┘
-                                     │
-                    ┌────────────────▼────────────────┐
-                    │        Intent Classification    │
-                    │                                 │
-                    │ Diagnostic / Definition /       │
-                    │ Recommendation / Chitchat       │
-                    └────────────────┬────────────────┘
-                                     │
-                                     ▼
-             ┌─────────────────────────────────────────────┐
-             │       Agentic Diagnostic Pipeline           │
-             │                                             │
-             │  1. Symptom Identification                  │
-             │              │                              │
-             │  2. CBR Memory Retrieval                    │
-             │              │                              │
-             │  3. ReAct Retrieval                         │
-             │       ┌──────┼──────────┐                   │
-             │       │      │          │                   │
-             │      KG     RAG     Web Search              │
-             │       │      │          │                   │
-             │       └──────┼──────────┘                   │
-             │              │                              │
-             │  4. Root Cause Analysis                     │
-             │              │                              │
-             │  5. Case Persistence                        │
-             └──────────────┬──────────────────────────────┘
-                            │
-                            ▼
-             ┌─────────────────────────────────────────────┐
-             │          Explainable Diagnosis              │
-             │                                             │
-             │ Root Cause │ Evidence │ Confidence │        │
-             │ Recommendations │ Causal Chain              │
-             └────────────────┬────────────────────────────┘
-                              │
-                              ▼
-                    ┌──────────────────────┐
-                    │     HITL Validation  │
-                    │                      │
-                    │ Validate / Correct / │
-                    │ Reject / Skip        │
-                    └──────────┬───────────┘
-                               │
-                         Validated Cases
-                               │
-                               ▼
-                         CBR Memory
-```
+<p align="center">
+  <img src="demo/Flow Diagram.png" width="700">
+</p>
 
 ---
+
 
 ## Diagnostic Pipeline
 
