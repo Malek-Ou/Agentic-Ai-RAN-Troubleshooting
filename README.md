@@ -158,6 +158,9 @@ The system implements a three-layer causal graph over structured operational dat
 (Anomaly)-[:OCCURS_AT]->(TimeWindow)
 (OSSAlarm)-[:CAUSES]->(RootCause)
 (KPI)-[:HAS_ROOT_CAUSE]->(RootCause)
+```
+
+---
 
 ---
 
