@@ -121,32 +121,6 @@ def _validate_records(records: list[dict[str, Any]]) -> None:
     logger.info(f"[ingester] Validation passed — {len(records)} records OK")
 
 
-# ─────────────────────────────────────────────
-# CONNECTION
-# ─────────────────────────────────────────────
-
-def _connect() -> QdrantClient:
-    try:
-        client = QdrantClient(
-            host        = QDRANT_HOST,
-            grpc_port   = QDRANT_GRPC_PORT,
-            prefer_grpc = True,
-            timeout     = 60,   # ← ajouter
-        )
-        client.get_collections()
-        logger.info("[ingester] Connected to Qdrant via gRPC")
-        return client
-
-    except Exception:
-        logger.warning("[ingester] gRPC unavailable — falling back to REST")
-        client = QdrantClient(
-            host    = QDRANT_HOST,
-            port    = QDRANT_PORT,
-            timeout = 60,       # ← ajouter
-        )
-        client.get_collections()
-        logger.info("[ingester] Connected to Qdrant via REST")
-        return client
 
 
 # ─────────────────────────────────────────────
