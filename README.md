@@ -150,7 +150,6 @@ The system implements a three-layer causal graph over structured operational dat
 
 #### Main Relationships
 
-```text
 (ENodeB)-[:HAS_CELL]->(Cell)
 (Cell)-[:HAS_ANOMALY]->(Anomaly)
 (Anomaly)-[:INVOLVES_KPI]->(KPI)
