@@ -38,7 +38,7 @@ DRIVER = GraphDatabase.driver(
     auth=(os.getenv("NEO4J_USER"), os.getenv("NEO4J_PASSWORD"))
 )
 
-DB_NAME = os.getenv("NEO4J_DATABASE", "neo4j")
+DB_NAME = os.getenv("NEO4J_DATABASE")
 
 # ── Cypher — 3 passes pour réduire la pression mémoire par transaction ─────────
 
