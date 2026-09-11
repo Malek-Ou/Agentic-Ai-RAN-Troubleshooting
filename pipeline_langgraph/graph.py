@@ -78,11 +78,7 @@ class RANAIOpsState(TypedDict):
     disable_cbr         : Optional[bool]
     intent_hint         : Optional[str] = None
 
-    # BATCH REPORT (provisoire) — métadonnée d'exécution, pas de logique
-    # métier : indique à memory_retrieve_agent / memory_save_agent quelle
-    # base SQLite lire/écrire. None = comportement inchangé (agents.agent_memory.DB_PATH,
-    # la base live). Permet l'exécution concurrente (ThreadPoolExecutor) sans
-    # dépendre d'une variable globale module-level non thread-safe.
+    
     memory_db_path      : Optional[str]
 
     # Misc
