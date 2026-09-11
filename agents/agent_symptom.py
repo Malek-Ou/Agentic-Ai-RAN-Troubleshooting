@@ -89,21 +89,6 @@ def _extract_components_deterministic(text: str) -> list[str]:
 # ─────────────────────────────────────────────
 # FAULT DOMAIN — couche orthogonale au kpi_category
 # ─────────────────────────────────────────────
-# kpi_category répond à "quel KPI/indicateur de performance est dégradé ?"
-# (accessibility, user_experience, ...) — c'est une dimension STATISTIQUE,
-# alignée sur le schéma Neo4j (:KPICategory) et utilisée par le CBR
-# (agent_memory.py fingerprint/dédup) et par query_knowledge_graph (Cypher).
-# On ne touche PAS à cet enum : il a des dépendances réelles en aval
-# (Neo4j déjà ingéré, SQLite déjà peuplé avec 89+ cas, eval scripts).
-#
-# fault_domain répond à une question différente et complémentaire :
-# "quelle est la NATURE du symptôme décrit ?" (panne matérielle/logicielle,
-# dégradation de performance, problème de signalisation...). Cette
-# dimension n'existe nulle part ailleurs dans le pipeline — elle sert
-# uniquement à enrichir la query de retrieval (cf. agent_retrieval.py
-# _rule_based_reformulation) sans jamais écraser le texte original de
-# l'utilisateur. Mots-clés volontairement courts et ciblés (pas de mots
-# génériques comme "failure"/"and"/"cell" — cf. bug _extract_alarm_keywords).
 FAULT_DOMAIN_PATTERNS = {
     "hardware_stability": [
         r"\brestart(?:ed|ing|s)?\b", r"\breboot(?:ed|ing|s)?\b", r"\bcrash(?:ed|ing|es)?\b",
