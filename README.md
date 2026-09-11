@@ -97,7 +97,7 @@ Both entry points converge into a shared diagnostic workflow.
 
 ## Diagnostic Pipeline
 
-The diagnostic workflow is implemented as a LangGraph state graph with shared state. Two investigation modes are supported: `manual_query` (free-text NOC engineer input) and `ml_anomaly` (pre-structured metadata injected directly from the ML pipeline).
+The diagnostic workflow is implemented as a LangGraph state graph with shared state. Two investigation modes are supported: user query and `ml_anomaly` (pre-structured metadata injected directly from the ML pipeline).
 
 | Node | Component | Main Responsibility |
 |------|-----------|---------------------|
@@ -124,38 +124,40 @@ Each KPI series is dispatched to the appropriate detection method based on its t
 
 ## Knowledge Graph
 
-The system implements a three-layer causal graph over structured operational data. Unlike vector retrieval — which extracts semantic evidence from technical documents — the Knowledge Graph provides explicit causal reasoning over structured operational data. While RAG retrieves documents describing possible root causes, the KG encodes causal relationships between KPI anomalies, alarms, and root cause categories. This complementarity motivates the use of two separate knowledge stores.
+The system implements a three-layer causal graph over structured operational data. Unlike vector retrieval which extracts semantic evidence from technical documents the Knowledge Graph provides explicit causal reasoning over structured operational data. While RAG retrieves documents describing possible root causes, the KG encodes causal relationships between KPI anomalies, alarms, and root cause categories. This complementarity motivates the use of two separate knowledge stores.
 
-### Three-Layer Structure
 
-| Layer | Content | Source |
-|-------|---------|--------|
-| **OSS Causal Graph** | `:RootCause` and `:OSSAlarm` nodes linked by `[:CAUSES]` relationships | 31,696 field OSS alarm records — documented operator ground truth + temporal co-occurrence (±120 min sliding window) |
-| **Operational Network Graph** | `:ENodeB`, `:Cell`, `:KPI`, `:KPICategory`, `:Anomaly`, `:TimeWindow` nodes | 283,564 ML-detected KPI anomaly observations across 878 cells and 119 eNodeBs |
-| **Bayesian Inference Layer** | `[:HAS_ROOT_CAUSE]` relationships with posterior probabilities `P(RC | KPI)` | Documentary evidence (35 Huawei manuals) + empirical field statistics |
+#### Graph Layers
 
-### Node Types
+| Layer | Description |
+|-------|-------------|
+| **OSS Knowledge** | Represents OSS alarms and their relationships with root causes. |
+| **Network Knowledge** | Represents eNodeBs, cells, KPIs, KPI categories, anomalies, and time windows. |
+| **Causal Inference** | Associates KPI patterns with possible root causes using posterior probabilities derived from documentation and field statistics. |
 
-A cell-level `risk_score` is computed from mean anomaly severity, critical anomaly ratio, and total anomaly count.
+#### Main Node Types
 
-| Node | Business Role | Key Properties |
-|------|--------------|----------------|
-| `:ENodeB` | Base station infrastructure | `id` |
-| `:Cell` | Network observation unit | `id`, `risk_score`, `anomaly_count`, `critical_ratio` |
-| `:KPI` | Impacted metric | `name` |
-| `:KPICategory` | KPI grouping | `category` |
-| `:Anomaly` | ML-detected event | `id`, `severity`, `z_score`, `model`, `kpi_category` |
-| `:TimeWindow` | Temporal dimension | `time`, `hour`, `day` |
+| Node | Role |
+|------|------|
+| `:ENodeB` | Base station |
+| `:Cell` | Network observation unit |
+| `:KPI` | Network performance metric |
+| `:KPICategory` | KPI classification |
+| `:Anomaly` | ML-detected KPI anomaly |
+| `:TimeWindow` | Temporal information |
+| `:RootCause` | Potential network root cause |
+| `:OSSAlarm` | OSS alarm |
 
-### Relationship Types
+#### Main Relationships
 
-| Relationship | Semantics |
-|--------------|-----------|
-| `(ENodeB)-[:HAS_CELL]->(Cell)` | Station owns cells |
-| `(Cell)-[:HAS_ANOMALY]->(Anomaly)` | Cell exhibits an anomaly |
-| `(Anomaly)-[:INVOLVES_KPI]->(KPI)` | Anomaly impacts a KPI |
-| `(KPI)-[:BELONGS_TO]->(KPICategory)` | KPI belongs to a category |
-| `(Anomaly)-[:OCCURS_AT]->(TimeWindow)` | Anomaly timestamped |
+```text
+(ENodeB)-[:HAS_CELL]->(Cell)
+(Cell)-[:HAS_ANOMALY]->(Anomaly)
+(Anomaly)-[:INVOLVES_KPI]->(KPI)
+(KPI)-[:BELONGS_TO]->(KPICategory)
+(Anomaly)-[:OCCURS_AT]->(TimeWindow)
+(OSSAlarm)-[:CAUSES]->(RootCause)
+(KPI)-[:HAS_ROOT_CAUSE]->(RootCause)
 
 ---
 
@@ -247,6 +249,6 @@ A cell-level `risk_score` is computed from mean anomaly severity, critical anoma
 
 ## License
 
-This project was developed as part of a Final Year Engineering Project (PFE) at Orange Tunisia.
+This project was developed as part of a Final Year Engineering Project (PFE).
 
 The repository contains only non-confidential research and software components. Industrial data and proprietary materials are not included.
