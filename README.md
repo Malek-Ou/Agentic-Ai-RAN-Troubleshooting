@@ -5,6 +5,9 @@
 <p align="center">
   <img src="demo/1 Dark Mode.png" width="600">
 </p>
+<p align="center">
+  <img src="demo/1 Flow Diagram.png" width="600">
+</p>
 
 ## Table of Contents
 
