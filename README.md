@@ -189,6 +189,7 @@ The system implements a three-layer causal graph over structured operational dat
 
 - Generative AI
 - Agentic AI & Multi-Agent Systems
+- Machine Learning
 - Retrieval-Augmented Generation (RAG)
 - Knowledge Graphs
 - Case-Based Reasoning (CBR)
